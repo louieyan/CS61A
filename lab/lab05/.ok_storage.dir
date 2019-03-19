@@ -1,0 +1,3 @@
+'map-correct', (0, 70)
+'filter-correct', (512, 70)
+'reduce-correct', (1024, 70)
