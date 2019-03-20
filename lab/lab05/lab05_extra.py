@@ -21,8 +21,8 @@ def build_successors_table(tokens):
     prev = '.'
     for word in tokens:
         if prev not in table:
-            "*** YOUR CODE HERE ***"
-        "*** YOUR CODE HERE ***"
+            table[prev] =  []
+        table[prev].append(word)
         prev = word
     return table
 
@@ -39,8 +39,12 @@ def construct_sent(word, table):
     import random
     result = ''
     while word not in ['.', '!', '?']:
-        "*** YOUR CODE HERE ***"
-    return result.strip() + word
+        next_word = random.choice(table[word])
+        result = result + ' ' + word
+        word = next_word
+    return result.strip() + word # S.strip([chars]) -> str
+                                 #Return a copy of the string S with leading and trailing
+                                 #whitespace removed.
 
 def shakespeare_tokens(path='shakespeare.txt', url='http://composingprograms.com/shakespeare.txt'):
     """Return the words of Shakespeare's plays as a list."""
@@ -53,8 +57,8 @@ def shakespeare_tokens(path='shakespeare.txt', url='http://composingprograms.com
         return shakespeare.read().decode(encoding='ascii').split()
 
 # Uncomment the following two lines
-# tokens = shakespeare_tokens()
-# table = build_successors_table(tokens)
+tokens = shakespeare_tokens()
+table = build_successors_table(tokens)
 
 def random_sent():
     import random
@@ -85,7 +89,14 @@ def prune_leaves(t, vals):
         5
       6
     """
-    "*** YOUR CODE HERE ***"
+    if is_leaf(t):
+        if label(t) in vals:
+            return None
+        else:
+            return tree(label(t))
+    else:
+        return tree(label(t), [prune_leaves(b, vals) for b in branches(t) if prune_leaves(b, vals) != None])
+
 
 # Q9
 def sprout_leaves(t, vals):
@@ -121,7 +132,10 @@ def sprout_leaves(t, vals):
           1
           2
     """
-    "*** YOUR CODE HERE ***"
+    if is_leaf(t):
+        return tree(label(t), [tree(x) for x in vals])
+    else:
+        return tree(label(t), [sprout_leaves(b, vals) for b in branches(t)])
 
 # Q10
 def add_trees(t1, t2):
@@ -159,4 +173,18 @@ def add_trees(t1, t2):
         5
       5
     """
-    "*** YOUR CODE HERE ***"
+    len_1, len_2 = len(branches(t1)), len(branches(t2))
+    if is_leaf(t1) and is_leaf(t2):
+        return tree(label(t1) + label(t2))
+    elif is_leaf(t1) and not is_leaf(t2):
+        return tree(label(t1) + label(t2), branches(t2))
+    elif is_leaf(t2) and not is_leaf(t1):
+        return tree(t2, t1)
+    elif len_1 == len_2:
+        return tree(label(t1) + label(t2), [add_trees(b1, b2) for b1, b2 in zip(branches(t1), branches(t2))])
+    elif len_1 < len_2:
+        branches_t1 = branches(t1) + [tree(0) for _ in range(len_2 - len_1)]
+        new_t1 = tree(label(t1), branches_t1)
+        return add_trees(new_t1, t2)
+    else:
+        return add_trees(t2, t1)

@@ -27,9 +27,9 @@ def reduce(combiner, seq):
     4
     """
     if len(seq) == 1:
-      return seq[0]
+        return seq[0]
     else:
-      return combiner(seq[0], reduce(combiner, seq[1:]))
+        return combiner(seq[0], reduce(combiner, seq[1:]))
 
 # Q3
 def acorn_finder(t):
@@ -46,7 +46,7 @@ def acorn_finder(t):
     >>> acorn_finder(numbers)
     False
     """
-    "*** YOUR CODE HERE ***"
+    return label(t) == 'acorn' or True in [acorn_finder(b) for b in branches(t)]
 
 # Q4
 def replace_leaf(t, old, new):
@@ -78,7 +78,14 @@ def replace_leaf(t, old, new):
     >>> laerad == yggdrasil # Make sure original tree is unmodified
     True
     """
-    "*** YOUR CODE HERE ***"
+    if is_leaf(t):
+        if label(t) != old:
+            return tree(label(t))
+        else:
+            return tree(new)
+    else:
+        return tree(label(t), [replace_leaf(b, old, new) for b in branches(t)])
+    
 
 # Tree ADT
 def tree(label, branches=[]):
