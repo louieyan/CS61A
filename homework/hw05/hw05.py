@@ -290,9 +290,9 @@ class Account:
         """Return the number of years until balance would grow to amount."""
         assert self.balance > 0 and amount > 0 and self.interest > 0
         year = 0
-        temp = self.balance # self.balance should not change, so backup first
-        while temp < amount:
-            temp = temp * (1 + self.interest)
+        balance_and_interest = self.balance # self.balance should not change, so backup first
+        while balance_and_interest < amount:
+            balance_and_interest = balance_and_interest * (1 + self.interest)
             year = year + 1
         return year
         
@@ -324,9 +324,16 @@ class FreeChecking(Account):
     """
     withdraw_fee = 1
     free_withdrawals = 2
+    def __init__(self, account_holder):
+        self.holder = account_holder
+        self.free_withdrawals = FreeChecking.free_withdrawals
+    def withdraw(self, amount):
+        if self.free_withdrawals != 0:
+            self.free_withdrawals -= 1
+            return Account.withdraw(self, amount)
+        else:
+            return Account.withdraw(self, amount + FreeChecking.withdraw_fee)
 
-    if free_withdrawals != 0:
-        
 
 ############
 # Mutation #
@@ -352,7 +359,16 @@ def make_counter():
     >>> c('b') + c2('b')
     5
     """
-    "*** YOUR CODE HERE ***"
+    count = {}
+    def counter(s):
+        if s not in count:
+            count[s] = 1
+        else:
+            count[s] = count[s] + 1
+        return count[s]
+    return counter
+
+
 
 def make_fib():
     """Returns a function that returns the next Fibonacci number
@@ -373,7 +389,14 @@ def make_fib():
     >>> fib() + sum([fib2() for _ in range(5)])
     12
     """
-    "*** YOUR CODE HERE ***"
+    prev, curr, nex = -1, 1, 0
+    def fib():
+        nonlocal nex, prev, curr
+        nex = prev + curr
+        prev, curr = curr, nex
+        return nex
+    return fib
+
 
 def make_withdraw(balance, password):
     """Return a password-protected withdraw function.
@@ -388,7 +411,7 @@ def make_withdraw(balance, password):
     >>> error
     'Incorrect password'
     >>> new_bal = w(25, 'hax0r')
-    >>> new
+    >>> new_bal
     50
     >>> w(75, 'a')
     'Incorrect password'
@@ -403,7 +426,22 @@ def make_withdraw(balance, password):
     >>> type(w(10, 'l33t')) == str
     True
     """
-    "*** YOUR CODE HERE ***"
+    incorrect_passwords = []
+    def withdraw(amount, input_password):
+        nonlocal balance
+        if len(incorrect_passwords) != 3:
+            if input_password == password:
+                if amount > balance:
+                    return 'Insufficient funds'
+                balance = balance - amount
+                return balance
+            else:
+                incorrect_passwords.append(input_password)
+                return 'Incorrect password'
+        else:
+            return "Your account is locked. Attempts: " + str(incorrect_passwords)
+    return withdraw
+
 
 def make_joint(withdraw, old_password, new_password):
     """Return a password-protected withdraw function that has joint access to
@@ -443,7 +481,15 @@ def make_joint(withdraw, old_password, new_password):
     >>> make_joint(w, 'hax0r', 'hello')
     "Your account is locked. Attempts: ['my', 'secret', 'password']"
     """
-    "*** YOUR CODE HERE ***"
+    error = withdraw(0, old_password)
+    if type(error) == str:
+        return error
+    def joint(amount, password_attempt):
+        if password_attempt == new_password:
+            return withdraw(amount, old_password)
+        return withdraw(amount, password_attempt)
+    return joint
+
 
 ###################
 # Extra Questions #
@@ -455,11 +501,11 @@ def interval(a, b):
 
 def lower_bound(x):
     """Return the lower bound of interval x."""
-    "*** YOUR CODE HERE ***"
+    return x[0]
 
 def upper_bound(x):
     """Return the upper bound of interval x."""
-    "*** YOUR CODE HERE ***"
+    return x[1]
 
 def str_interval(x):
     """Return a string representation of interval x."""
@@ -475,22 +521,23 @@ def add_interval(x, y):
 def mul_interval(x, y):
     """Return the interval that contains the product of any value in x and any
     value in y."""
-    p1 = x[0] * y[0]
-    p2 = x[0] * y[1]
-    p3 = x[1] * y[0]
-    p4 = x[1] * y[1]
-    return [min(p1, p2, p3, p4), max(p1, p2, p3, p4)]
+    p1 = lower_bound(x) * lower_bound(y)
+    p2 = lower_bound(x) * upper_bound(y)
+    p3 = upper_bound(x) * lower_bound(y)
+    p4 = upper_bound(x) * upper_bound(y)
+    return interval(min(p1, p2, p3, p4), max(p1, p2, p3, p4))
 
 def sub_interval(x, y):
     """Return the interval that contains the difference between any value in x
     and any value in y."""
-    "*** YOUR CODE HERE ***"
+    negative_y = interval(-upper_bound(y), -lower_bound(y))
+    return add_interval(x, negative_y)
 
 def div_interval(x, y):
     """Return the interval that contains the quotient of any value in x divided by
     any value in y. Division is implemented as the multiplication of x by the
     reciprocal of y."""
-    "*** YOUR CODE HERE ***"
+    assert lower_bound(y) * upper_bound(y) > 0, "intervals span zero can't be divided"
     reciprocal_y = interval(1/upper_bound(y), 1/lower_bound(y))
     return mul_interval(x, reciprocal_y)
 
@@ -512,8 +559,8 @@ def check_par():
     >>> lower_bound(x) != lower_bound(y) or upper_bound(x) != upper_bound(y)
     True
     """
-    r1 = interval(1, 1) # Replace this line!
-    r2 = interval(1, 1) # Replace this line!
+    r1 = interval(1, 2) # Replace this line!
+    r2 = interval(3, 4) # Replace this line!
     return r1, r2
 
 def multiple_references_explanation():
@@ -528,7 +575,12 @@ def quadratic(x, a, b, c):
     >>> str_interval(quadratic(interval(1, 3), 2, -3, 1))
     '0 to 10'
     """
-    "*** YOUR CODE HERE ***"
+    extreme_point = b / (-2 * a)
+    f = lambda t: a*t*t + b*t + c
+    p1, p2, p3 = map(f, [extreme_point, lower_bound(x), upper_bound(x)])
+    if extreme_point >= lower_bound(x) and extreme_point <= upper_bound(x):
+        return interval(min(p1, p2, p3), max(p1, p2, p3))
+    return interval(min(p2, p3), max(p2, p3))
 
 def polynomial(x, c):
     """Return the interval that is the range of the polynomial defined by
@@ -541,5 +593,29 @@ def polynomial(x, c):
     >>> str_interval(polynomial(interval(0.5, 2.25), [10, 24, -6, -8, 3]))
     '18.0 to 23.0'
     """
-    "*** YOUR CODE HERE ***"
+    # Newton method
+    def newton_method(f, df, t):
+        while abs(f(t)) > 1e-15:
+            t = t - f(t) / df(t)
+        return t
+    f = lambda t: sum([c[i] * pow(t, i) for i in range(0, len(c))])
+    df = lambda t: sum(c[i] * i * pow(t, i-1) for i in range(1, len(c)))
+    ddf = lambda t: sum(c[i] * i * (i-1) * pow(t, i-2) for i in range(2, len(c)))
+
+    # find as many extreme points as we can in the interval x
+    # split the interval x
+    lower, upper = lower_bound(x), upper_bound(x)
+    num_partitions = 10
+    partition_len = (upper - lower) / num_partitions
+    partitions = [lower + i * partition_len for i in range(0, num_partitions+1)]
+    # find extrem points
+    extreme_points = [newton_method(df, ddf, p) for p in partitions]
+    # add lower, upper to get the points at where f is computed
+    # notice the `if condition` in list comprehension
+    calculate_points = [point for point in extreme_points if point > lower and point < upper] + [lower, upper]
+    #print(eval_points)
+    vals = [f(p) for p in calculate_points]
+    #print(vals)
+    return interval(min(vals), max(vals))
+
 

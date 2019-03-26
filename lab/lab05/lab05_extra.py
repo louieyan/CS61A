@@ -174,13 +174,13 @@ def add_trees(t1, t2):
       5
     """
     len_1, len_2 = len(branches(t1)), len(branches(t2))
-    if is_leaf(t1) and is_leaf(t2):
-        return tree(label(t1) + label(t2))
-    elif is_leaf(t1) and not is_leaf(t2):
-        return tree(label(t1) + label(t2), branches(t2))
-    elif is_leaf(t2) and not is_leaf(t1):
-        return tree(t2, t1)
-    elif len_1 == len_2:
+    #if is_leaf(t1) and is_leaf(t2):
+        #return tree(label(t1) + label(t2))
+    #elif is_leaf(t1) and not is_leaf(t2):
+        #return tree(label(t1) + label(t2), branches(t2))
+    #elif is_leaf(t2) and not is_leaf(t1):
+        #return tree(t2, t1)
+    if len_1 == len_2:
         return tree(label(t1) + label(t2), [add_trees(b1, b2) for b1, b2 in zip(branches(t1), branches(t2))])
     elif len_1 < len_2:
         branches_t1 = branches(t1) + [tree(0) for _ in range(len_2 - len_1)]
