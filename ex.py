@@ -533,12 +533,151 @@ a = Account('Lei')
 a.deposit(10)
 #a.withdraw(5)
 #a.withdraw(10)
-        
-class A:
-    n = 1
-    def __init__(self, x):
-        self.m = x
 
-class B(A):
+class Ratio:
+    def __init__(self, n, d):
+        self.numer = n
+        self.denom = d
+
+    def __repr__(self):
+        return 'Ratio({0}, {1})'.format(self.numer, self.denom)
+
+    def __str__(self):
+        return '{0}/{1}'.format(self.numer, self.denom)
+
+    def __add__(self, other):
+        if isinstance(other, int):
+            n = self.numer + self.denom * other
+            d = self.denom
+        elif isinstance(other, Ratio):
+            n = self.numer * other.denom + self.denom * other.numer
+            d = self.denom * other.denom
+        elif isinstance(other, float):
+            return float(self) + other
+
+        g = gcd(n, d)
+        return Ratio(n // g, d // g)
+
+    __radd__ = __add__
     
-    
+    def __float__(self):
+        return self.numer / self.denom
+
+def fib(n):
+    if n == 0 or n == 1:
+        return n
+    else:
+        return fib(n-2) + fib(n-1)
+
+def count(f):
+    def counted(*args):
+        counted.call_count += 1
+        return f(*args)
+    counted.call_count = 0
+    return counted
+
+import functools
+def do_twice(func):
+    @functools.wraps(func)
+    def wrapper_do_twice(*args, **kwargs):
+        func(*args, **kwargs)
+        func(*args, **kwargs)
+    return wrapper_do_twice
+
+@do_twice
+def say_whee():
+    print('Whee!')
+
+@do_twice
+def greet(name):
+    print(name)
+
+import functools
+import time
+
+def timer(func):
+    """Print the runtime of the decorated function"""
+    @functools.wraps(func)
+    def wrapper_timer(*args, **kwargs):
+        start_time = time.perf_counter()    # 1
+        value = func(*args, **kwargs)
+        end_time = time.perf_counter()      # 2
+        run_time = end_time - start_time    # 3
+        print(f"Finished {func.__name__!r} in {run_time:.4f} secs")
+        return value
+    return wrapper_timer
+
+@timer
+def waste_some_time(num_times):
+    for _ in range(num_times):
+        sum([i**2 for i in range(10000)])
+
+def debug(func):
+    """Print the function signature and return value"""
+    @functools.wraps(func)
+    def wrapper_debug(*args, **kwargs):
+        args_repr = [repr(a) for a in args]                      # 1
+        kwargs_repr = [f"{k}={v!r}" for k, v in kwargs.items()]  # 2
+        signature = ", ".join(args_repr + kwargs_repr)           # 3
+        print(f"Calling {func.__name__}({signature})")
+        value = func(*args, **kwargs)
+        print(f"{func.__name__!r} returned {value!r}")           # 4
+        return value
+    return wrapper_debug
+
+@debug
+def make_greeting(name, age=None):
+    if age is None:
+        return f"Howdy {name}!"
+    else:
+        return f"Whoa {name}! {age} already, you are growing up!"
+
+def slow_down(func):
+    """Sleep 1 second before calling the function"""
+    @functools.wraps(func)
+    def wrapper_slow_down(*args, **kwargs):
+        time.sleep(1)
+        return func(*args, **kwargs)
+    return wrapper_slow_down
+
+@slow_down
+def countdown(from_number):
+    if from_number < 1:
+        print("Happy new year!")
+    else:
+        print(from_number)
+        countdown(from_number - 1)
+
+
+
+def count(f):
+    def counted(*args):
+        counted.call_count += 1
+        return f(*args)
+    counted.call_count = 0
+    return counted
+
+def count_frames(f):
+    def counted(*args):
+        counted.open_count += 1
+        counted.max_count = max(counted.max_count, counted.open_count)
+        reslut = f(*args)
+        counted.open_count -= 1
+        return reslut
+    counted.open_count = 0
+    counted.max_count = 0
+    return counted
+
+def memo(f):
+    cache = {}
+    def memoized(n):
+        if n not in cache:
+            cache[n] = f(n)
+        return cache[n]
+    return memoized
+
+@memo
+def fib(n):
+    if n == 0 or n == 1:
+        return n
+    return fib(n-2) + fib(n-1)
