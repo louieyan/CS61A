@@ -194,6 +194,8 @@ class ThrowerAnt(Ant):
     implemented = True
     damage = 1
     food_cost = 3
+    min_range = 0               # define range 
+    max_range = float('inf')
 
     def nearest_bee(self, hive):
         """Return the nearest Bee in a Place that is not the HIVE, connected to
@@ -203,12 +205,19 @@ class ThrowerAnt(Ant):
         """
         # BEGIN Problem 3 and 4
         curr_place = self.place
-        while curr_place and curr_place is not hive:
-            if curr_place.bees:
+        distance_from_self = 0
+        in_range = distance_from_self >= self.min_range and distance_from_self <= self.max_range # bool in range or not
+        while curr_place and (curr_place is not hive): # curr_place is not None
+            if curr_place.bees and in_range: # curr_place should have bees 
                 return random_or_none(curr_place.bees)
-            else:
+            else: # if has no bee, find in its entrance
                 curr_place = curr_place.entrance
-            
+                distance_from_self += 1
+                in_range = distance_from_self >= self.min_range and distance_from_self <= self.max_range
+                #print([distance_from_self, in_range, curr_place.bees])
+
+        #if curr_place == None or curr_place == hive:
+        #    return None     
 
         # END Problem 3 and 4
 
@@ -265,7 +274,11 @@ class LongThrower(ThrowerAnt):
 
     name = 'Long'
     # BEGIN Problem 4
-    implemented = False   # Change to True to view in the GUI
+    implemented = True   # Change to True to view in the GUI
+    food_cost = 2
+    min_range = 5
+    def nearest_bee(self, hive):
+        return super().nearest_bee(hive) # min_range = 5
     # END Problem 4
 
 
@@ -274,7 +287,11 @@ class ShortThrower(ThrowerAnt):
 
     name = 'Short'
     # BEGIN Problem 4
-    implemented = False   # Change to True to view in the GUI
+    implemented = True   # Change to True to view in the GUI
+    food_cost = 2
+    max_range = 3
+    def nearest_bee(self, hive):
+        return super().nearest_bee(hive)
     # END Problem 4
 
 
