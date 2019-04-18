@@ -32,7 +32,7 @@ class Place(object):
         """Add an INSECT to this Place.
 
         There can be at most one Ant in a Place, unless exactly one of them is
-        a BodyguardAnt (Phase 6), in which case there can be two. If add_insect
+        a BodyguardAnt (Phase 3), in which case there can be two. If add_insect
         tries to add more Ants than is allowed, an assertion error is raised.
 
         There can be any number of Bees in a Place.
@@ -42,7 +42,13 @@ class Place(object):
                 self.ant = insect
             else:
                 # BEGIN Problem 9
-                assert self.ant is None, 'Two ants in {0}'.format(self)
+                if self.ant.can_contain(insect):
+                    self.ant.contain_ant(insect)
+                elif insect.can_contain(self.ant):
+                    insect.contain_ant(self.ant)
+                    self.ant = insect
+                else:
+                    assert False, 'Two ants in {0}'.format(self)
                 # END Problem 9
         else:
             self.bees.append(insect)
@@ -160,6 +166,7 @@ class Ant(Insect):
     implemented = False  # Only implemented Ant classes should be instantiated
     food_cost = 0
     blocks_path = True
+    container = False
 
     def __init__(self, armor=1):
         """Create an Ant with an ARMOR quantity."""
@@ -167,7 +174,7 @@ class Ant(Insect):
 
     def can_contain(self, other):
         # BEGIN Problem 9
-        "*** YOUR CODE HERE ***"
+        return self.container and (self.ant is None) and (not other.container)
         # END Problem 9
 
 
@@ -302,7 +309,16 @@ class ShortThrower(ThrowerAnt):
 
 
 # BEGIN Problem 8
-# The WallAnt class
+class WallAnt(Ant):
+    name = 'Wall'
+    food_cost = 4
+    implemented = True
+    
+    def __init__(self):
+        Ant.__init__(self, armor=4)
+
+    
+
 # END Problem 8
 
 
@@ -368,7 +384,9 @@ class BodyguardAnt(Ant):
     """BodyguardAnt provides protection to other Ants."""
     name = 'Bodyguard'
     # BEGIN Problem 9
-    implemented = False   # Change to True to view in the GUI
+    implemented = True   # Change to True to view in the GUI
+    food_cost = 4
+    container = True
     # END Problem 9
 
     def __init__(self):
@@ -377,12 +395,13 @@ class BodyguardAnt(Ant):
 
     def contain_ant(self, ant):
         # BEGIN Problem 9
-        "*** YOUR CODE HERE ***"
+        self.ant = ant
         # END Problem 9
 
     def action(self, colony):
         # BEGIN Problem 9
-        "*** YOUR CODE HERE ***"
+        if self.ant is not None:
+            self.ant.action(colony)
         # END Problem 9
 
 class TankAnt(BodyguardAnt):
@@ -390,12 +409,16 @@ class TankAnt(BodyguardAnt):
     name = 'Tank'
     damage = 1
     # BEGIN Problem 10
-    implemented = False   # Change to True to view in the GUI
+    implemented = True   # Change to True to view in the GUI
+    food_cost = 6
     # END Problem 10
 
     def action(self, colony):
         # BEGIN Problem 10
-        "*** YOUR CODE HERE ***"
+        if self.place.bees != []:
+            temp = list(self.place.bees)
+            [bee.reduce_armor(self.damage) for bee in temp]
+        BodyguardAnt.action(self, colony)
         # END Problem 10
 
 # BEGIN Problem 13
