@@ -683,3 +683,11 @@ def fib(n):
     return fib(n-2) + fib(n-1)
 
 words = ["cat", "window", "defenestrate"]
+
+def foo(n):
+    if n > 5:
+        pass
+    
+    
+    else:
+        print(n)
