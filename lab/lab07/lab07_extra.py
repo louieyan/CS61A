@@ -94,6 +94,7 @@ def has_cycle_constant(link):
     >>> has_cycle_constant(v)
     True
     """
+    ### I don't know why it works...
     if link is Link.empty:
         return False
 
