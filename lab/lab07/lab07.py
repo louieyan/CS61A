@@ -32,19 +32,11 @@ def store_digits(n):
     >>> store_digits(876)
     Link(8, Link(7, Link(6)))
     """
-    def list_to_link(lst):
-        if len(lst) == 1:
-            return Link(lst[0])
-        else:
-            return Link(lst[0], list_to_link(lst[1:]))
-    
-    reverse_digits_lst = []
+    s = Link.empty
     while n > 0:
-        reverse_digits_lst.append(n%10)
-        n = int(n / 10)
-
-    reverse_digits_lst.reverse()
-    return list_to_link(reverse_digits_lst)
+        n, last = n // 10, n % 10
+        s = Link(last, s)
+    return s
 
 
 # Q5
