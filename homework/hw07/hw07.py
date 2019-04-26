@@ -35,7 +35,6 @@ class Link:
     def second(self, value):
         self.rest.first = value
 
-
     def __repr__(self):
         if self.rest is not Link.empty:
             rest_repr = ', ' + repr(self.rest)
@@ -50,6 +49,7 @@ class Link:
             self = self.rest
         return string + str(self.first) + '>'
 
+
 def digits(n):
     """Return the digits of n as a linked list.
 
@@ -63,6 +63,7 @@ def digits(n):
         n, last = n // 10, n % 10
         s = Link(last, s)
     return s
+
 
 class VendingMachine:
     """A vending machine that vends some product for some price.
@@ -101,6 +102,7 @@ class VendingMachine:
     >>> w.vend()
     'Here is your soda.'
     """
+
     def __init__(self, product, price):
         self.product = product
         self.price = price
@@ -129,6 +131,7 @@ class VendingMachine:
         self.balance = 0
         self.stock -= 1
         return message + '.'
+
 
 class MissManners:
     """A container class that only forwards messages that say please.
@@ -161,6 +164,7 @@ class MissManners:
     >>> double_fussy.ask('please ask', 'please deposit', 10)
     'Current balance: $10'
     """
+
     def __init__(self, obj):
         self.obj = obj
 
@@ -168,4 +172,10 @@ class MissManners:
         magic_word = 'please '
         if not message.startswith(magic_word):
             return 'You must learn to say please first.'
-        "*** YOUR CODE HERE ***"
+        else:
+            message = message[len(magic_word):] # not try to use str.lstrip(s), it will remove all leading s, 
+            if hasattr(self.obj, message):      # e.g. 'please please deposit'.lstrip('please ') == 'deposit'
+                obj_method = getattr(self.obj, message)
+                return obj_method(*args)
+            else:
+                return 'Thanks for asking, but I know not how to ' + message + '.'
