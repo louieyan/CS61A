@@ -761,3 +761,10 @@ class Tree:
     
     def copy_tree(self):
         return Tree(self.label, [b.copy_tree() for b in self.branches])
+
+try:
+    x = 1 / 0
+except ZeroDivisionError as e:
+    print('handling a', type(e))
+    x = 0
+
