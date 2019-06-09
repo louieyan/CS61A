@@ -31,7 +31,11 @@ def scheme_eval(expr, env, _=None): # Optional third argument is ignored
         return SPECIAL_FORMS[first](rest, env)
     else:
         # BEGIN PROBLEM 5
-        "*** YOUR CODE HERE ***"
+        operator = scheme_eval(expr.first, env)
+        check_procedure(operator)
+        operands = expr.second.map(lambda x: scheme_eval(x, env))
+        return scheme_apply(operator, operands, env)
+
         # END PROBLEM 5
 
 def self_evaluating(expr):
@@ -49,10 +53,15 @@ def scheme_apply(procedure, args, env):
         return eval_all(procedure.body, new_env)
 
 def eval_all(expressions, env):
-    """Evaluate each expression im the Scheme list EXPRESSIONS in
+    """Evaluate each expression in the Scheme list EXPRESSIONS in
     environment ENV and return the value of the last."""
     # BEGIN PROBLEM 8
-    return scheme_eval(expressions.first, env)
+    if expressions == nil:
+        return None
+    if expressions.second == nil:
+        return scheme_eval(expressions.first, env)
+    scheme_eval(expressions.first, env)
+    return eval_all(expressions.second, env)
     # END PROBLEM 8
 
 ################
@@ -76,13 +85,16 @@ class Frame:
     def define(self, symbol, value):
         """Define Scheme SYMBOL to have VALUE."""
         # BEGIN PROBLEM 3
-        "*** YOUR CODE HERE ***"
+        self.bindings[symbol] = value
         # END PROBLEM 3
 
     def lookup(self, symbol):
         """Return the value bound to SYMBOL. Errors if SYMBOL is not found."""
         # BEGIN PROBLEM 3
-        "*** YOUR CODE HERE ***"
+        if symbol in self.bindings:
+            return self.bindings[symbol]
+        elif self.parent is not None:
+            return self.parent.lookup(symbol)
         # END PROBLEM 3
         raise SchemeError('unknown identifier: {0}'.format(symbol))
 
@@ -99,7 +111,14 @@ class Frame:
         """
         child = Frame(self) # Create a new child with self as the parent
         # BEGIN PROBLEM 11
-        "*** YOUR CODE HERE ***"
+        if scheme_length(formals) != scheme_length(vals):
+            raise SchemeError('the numbers of parameters and values are not equal')
+        if formals is nil and vals is nil:
+            return child
+        while formals.second is not nil:
+            child.define(formals.first, vals.first)
+            formals, vals = formals.second, vals.second
+        child.define(formals.first, vals.first)
         # END PROBLEM 11
         return child
 
@@ -141,7 +160,12 @@ class PrimitiveProcedure(Procedure):
             python_args.append(args.first)
             args = args.second
         # BEGIN PROBLEM 4
-        "*** YOUR CODE HERE ***"
+        if self.use_env:
+            python_args.append(env)
+        try:
+            return self.fn(*python_args)
+        except TypeError as e:
+            raise SchemeError('wrong number of arguments were passed!') 
         # END PROBLEM 4
 
 class LambdaProcedure(Procedure):
@@ -159,7 +183,7 @@ class LambdaProcedure(Procedure):
         """Make a frame that binds my formal parameters to ARGS, a Scheme list
         of values, for a lexically-scoped call evaluated in environment ENV."""
         # BEGIN PROBLEM 12
-        "*** YOUR CODE HERE ***"
+        return self.env.make_child_frame(self.formals, args)
         # END PROBLEM 12
 
     def __str__(self):
@@ -200,11 +224,15 @@ def do_define_form(expressions, env):
     if scheme_symbolp(target):
         check_form(expressions, 2, 2)
         # BEGIN PROBLEM 6
-        "*** YOUR CODE HERE ***"
+        value = scheme_eval(expressions.second.first, env)
+        env.define(target, value)
+        return target
         # END PROBLEM 6
     elif isinstance(target, Pair) and scheme_symbolp(target.first):
         # BEGIN PROBLEM 10
-        "*** YOUR CODE HERE ***"
+        value = LambdaProcedure(target.second, expressions.second, env)
+        env.define(target.first, value)
+        return target.first
         # END PROBLEM 10
     else:
         bad_target = target.first if isinstance(target, Pair) else target
@@ -214,7 +242,7 @@ def do_quote_form(expressions, env):
     """Evaluate a quote form."""
     check_form(expressions, 1, 1)
     # BEGIN PROBLEM 7
-    "*** YOUR CODE HERE ***"
+    return expressions.first
     # END PROBLEM 7
 
 def do_begin_form(expressions, env):
@@ -228,7 +256,8 @@ def do_lambda_form(expressions, env):
     formals = expressions.first
     check_formals(formals)
     # BEGIN PROBLEM 9
-    "*** YOUR CODE HERE ***"
+    body = expressions.second
+    return LambdaProcedure(formals, body, env)
     # END PROBLEM 9
 
 def do_if_form(expressions, env):

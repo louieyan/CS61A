@@ -768,3 +768,7 @@ except ZeroDivisionError as e:
     print('handling a', type(e))
     x = 0
 
+def countdown(k):
+    if k > 0:
+        yield k
+        yield from countdown(k-1)
