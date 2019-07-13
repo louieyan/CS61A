@@ -772,3 +772,35 @@ def countdown(k):
     if k > 0:
         yield k
         yield from countdown(k-1)
+
+
+# Q7
+def merge(s0, s1):
+    """Yield the elements of strictly increasing iterables s0 and s1, removing
+    repeats. Assume that s0 and s1 have no repeats. s0 or s1 may be infinite
+    sequences.
+
+    >>> m = merge([0, 2, 4, 6, 8, 10, 12, 14], [0, 3, 6, 9, 12, 15])
+    >>> type(m)
+    <class 'generator'>
+    >>> list(m)
+    [0, 2, 3, 4, 6, 8, 9, 10, 12, 14, 15]
+    >>> def big(n):
+    ...    k = 0
+    ...    while True: yield k; k += n
+    >>> m = merge(big(2), big(3))
+    >>> [next(m) for _ in range(11)]
+    [0, 2, 3, 4, 6, 8, 9, 10, 12, 14, 15]
+    """
+    i0, i1 = iter(s0), iter(s1)
+    e0, e1 = next(i0, None), next(i1, None)
+    while e0 is not None or e1 is not None:
+        if e1 is None or e0 < e1:
+            yield e0
+            e0 = next(i0, None)
+        elif e0 is None or e1 < e0:
+            yield e1
+            e1 = next(i1, None)
+        else:
+            yield e0
+            e0, e1 = next(i0, None), next(i1, None)
