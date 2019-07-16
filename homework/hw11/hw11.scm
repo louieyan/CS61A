@@ -28,6 +28,8 @@
       (else (contains (cdr lst) cur))))
 
 
+;;; https://www.studocu.com/en-au/document/university-of-california-berkeley/the-structure-and-interpretation-of-computer-progra/other/homework-11-solutions-cs-61a-spring-2018/1702843/view
+;;; Complete explanation can be found in the above page.
 (define (has-cycle-constant s)
   (define (helper slow fast)
     (cond ((or (null? fast) (null? (cdr-stream fast))) #f)
@@ -36,4 +38,5 @@
 
   (helper s (cdr-stream s))
 )
+
 
