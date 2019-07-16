@@ -774,33 +774,69 @@ def countdown(k):
         yield from countdown(k-1)
 
 
-# Q7
-def merge(s0, s1):
-    """Yield the elements of strictly increasing iterables s0 and s1, removing
-    repeats. Assume that s0 and s1 have no repeats. s0 or s1 may be infinite
-    sequences.
+def is_prime(x):
+    if x <= 1:
+        return False
+    return all(map(lambda y: x % y, range(2, x)))
 
-    >>> m = merge([0, 2, 4, 6, 8, 10, 12, 14], [0, 3, 6, 9, 12, 15])
-    >>> type(m)
-    <class 'generator'>
-    >>> list(m)
-    [0, 2, 3, 4, 6, 8, 9, 10, 12, 14, 15]
-    >>> def big(n):
-    ...    k = 0
-    ...    while True: yield k; k += n
-    >>> m = merge(big(2), big(3))
-    >>> [next(m) for _ in range(11)]
-    [0, 2, 3, 4, 6, 8, 9, 10, 12, 14, 15]
-    """
-    i0, i1 = iter(s0), iter(s1)
-    e0, e1 = next(i0, None), next(i1, None)
-    while e0 is not None or e1 is not None:
-        if e1 is None or e0 < e1:
-            yield e0
-            e0 = next(i0, None)
-        elif e0 is None or e1 < e0:
-            yield e1
-            e1 = next(i1, None)
-        else:
-            yield e0
-            e0, e1 = next(i0, None), next(i1, None)
+def sum_primes(a, b):
+    return sum(filter(is_prime, range(a, b)))
+
+class Stream:
+    """A lazily computed linked list."""
+    class empty:
+        def __repr__(self):
+            return 'Stream.empty'
+    empty = empty()
+    
+    def __init__(self, first, compute_rest=lambda: empty):
+        assert callable(compute_rest), 'compute_rest must be callable.'
+        self.first = first
+        self._compute_rest = compute_rest
+    
+    @property
+    def rest(self):
+        """Return the rest of the stream, computing it if necessary."""
+        if self._compute_rest is not None:
+            self._rest = self._compute_rest()
+            self._compute_rest = None
+
+        return self._rest
+    
+    def __repr__(self):
+        return 'Stream({0}, <...>)'.format(repr(self.first))
+
+
+def integer_stream(first):
+    return Stream(first, lambda: integer_stream(first+1))
+
+def map_stream(fn, s):
+    if s is Stream.empty:
+        return s
+    return Stream(fn(s.first), lambda: map_stream(fn, s.rest))
+
+def filter_stream(fn, s):
+    if s is Stream.empty:
+        return s
+    def compute_rest():
+        return filter_stream(fn, s.rest)
+    if fn(s.first):
+        return Stream(s.first, compute_rest)
+    else:
+        return compute_rest()
+
+def first_k_as_list(s, k):
+    first_k = []
+    while s is not Stream.empty and k > 0:
+        first_k.append(s.first)
+        s, k = s.rest, k - 1
+    return first_k
+
+def primes(pos_stream):
+    def not_divible(x):
+        return x % pos_stream.first != 0
+    
+    def compute_rest():
+        return primes(filter_stream(not_divible, pos_stream.rest))
+    
+    return Stream(pos_stream.first, compute_rest)
