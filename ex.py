@@ -840,3 +840,9 @@ def primes(pos_stream):
         return primes(filter_stream(not_divible, pos_stream.rest))
     
     return Stream(pos_stream.first, compute_rest)
+
+import sys
+for line in sys.stdin:
+    sys.stdout.write(" ".join(line))
+
+    
